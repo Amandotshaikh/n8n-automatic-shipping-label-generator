@@ -1,0 +1,1 @@
+# n8n-automatic-shipping-label-generator
