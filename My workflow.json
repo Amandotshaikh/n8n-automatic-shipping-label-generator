@@ -1,0 +1,184 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "93b6e2cd-4f8e-49cf-a6a4-5b939f7527bd",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1tcMPkgM2JNnaHAXizTIkcrEN6S9qFPowtk_sZSeC77k",
+          "mode": "list",
+          "cachedResultName": "Shipping Labels Data",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1tcMPkgM2JNnaHAXizTIkcrEN6S9qFPowtk_sZSeC77k/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1tcMPkgM2JNnaHAXizTIkcrEN6S9qFPowtk_sZSeC77k/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        208,
+        0
+      ],
+      "id": "c4839b9b-6683-4dbf-8247-d63e727dca3f",
+      "name": "Get row(s) in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "2cbCgbdO2g0Ai8cU",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const rows = $input.all().map(item => item.json);\n\nlet html = '<!DOCTYPE html>' +\n'<html>' +\n'<head>' +\n'<style>' +\n'body { font-family: Arial; }' +\n'.label { width:45%; border:1px solid #000; padding:10px; margin:10px; float:left; height:120px; }' +\n'.page-break { page-break-after: always; }' +\n'</style>' +\n'</head>' +\n'<body>';\n\nrows.forEach((row, index) => {\n  html += '<div class=\"label\">' +\n    '<strong>' + row.Name + '</strong><br/>' +\n    row[\"Address 1\"] + '<br/>' +\n    row[\"Address 2\"] + '<br/>' +\n    row.Pincode + '<br/>' +\n    '📞 ' + row[\"Phone Number\"] +\n    '</div>';\n\n  if ((index + 1) % 8 === 0) {\n    html += '<div class=\"page-break\"></div>';\n  }\n});\n\nhtml += '</body></html>';\n\nreturn [{ json: { html } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        416,
+        0
+      ],
+      "id": "8aea8927-cdb8-4f4f-ab31-cfe37727de53",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.pdfshift.io/v3/convert/pdf",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-API-Key",
+              "value": ""
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { source: $json[\"html\"] } }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        624,
+        0
+      ],
+      "id": "baea4e18-c590-42c9-af01-08d3749899ff",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "sendTo": "amanshaikkhh999@gmail.com",
+        "subject": "Shipping Labels PDF - Auto Generated",
+        "message": "Hi,  Please find attached the auto-generated shipping labels PDF.  Generated automatically using n8n workflow.  Regards, Aman",
+        "options": {
+          "attachmentsUi": {
+            "attachmentsBinary": [
+              {}
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        832,
+        0
+      ],
+      "id": "a1143ae8-743d-4a4f-875a-61002ae7053e",
+      "name": "Send a message",
+      "webhookId": "8968afce-5a94-42d5-bc99-1520db197278",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "f5ETKtxGqXKJmM6F",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "de8243e3-5907-4079-8796-db9a83a3ddfd",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "c3a46d2abeb3884f11acd086b44e9f8747048c1f1294c960108b92f2b8842d67"
+  },
+  "id": "CoDAp4nKV0ZdURFr",
+  "tags": []
+}
